@@ -210,10 +210,13 @@ void dlx_solve(dlx_t p,
   recurse();
 }
 
+int *sol, soln;
+void (*fcb)(int[], int);
+void found_() { fcb(sol, soln); }
+void cover_(int c, int s, int r) { sol[soln++] = r; }
+void uncover_() { soln--; }
+
 void dlx_forall_cover(dlx_t p, void (*cb)(int[], int)) {
-  int sol[p->rtabn], soln = 0;
-  void cover(int c, int s, int r) { sol[soln++] = r; }
-  void uncover() { soln--; }
-  void found() { cb(sol, soln); }
-  dlx_solve(p, cover, uncover, found, NULL);
+  sol = malloc(sizeof(int) * p->rtabn), soln = 0, fcb = cb;
+  dlx_solve(p, cover_, uncover_, found_, NULL);
 }
