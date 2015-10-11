@@ -5,7 +5,22 @@
 //
 // Row and column numbers are 0-indexed.
 
-struct dlx_s;
+struct cell_s;
+typedef struct cell_s *cell_ptr;
+struct cell_s {
+  cell_ptr U, D, L, R;
+  int n;
+  union {
+    cell_ptr c;
+    int s;
+  };
+};
+
+struct dlx_s {
+  int ctabn, rtabn, ctab_alloc, rtab_alloc;
+  cell_ptr *ctab, *rtab;
+  cell_ptr root;
+};
 typedef struct dlx_s *dlx_t;
 
 // Returns new empty exact cover problem. No rows. No columns.

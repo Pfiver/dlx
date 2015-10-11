@@ -89,6 +89,7 @@ void found() { tabs(), puts("solved!"); }
 void stuck(int c) { tabs(), con(c), puts(" => stuck! backtracking..."); }
 
 // main
+  int nine(int a, int b, int c) { return 9*9*a + 9*b + c; }
 int main(int argc, char *argv[]) {
   int verbose = 0, opt;
   while ((opt = getopt(argc, argv, "v")) != -1) {
@@ -101,14 +102,13 @@ int main(int argc, char *argv[]) {
       isdigit(c) ? a[i][j] = c - '0', 0 : c != '.');
 
   dlx_t dlx = dlx_new();
-  int nine(int a, int b, int c) { return 9*9*a + 9*b + c; }
   F(d, 9) F(r, 9) F(c, 9) {
     int i = 0;
-    void con(int x, int y) { dlx_set(dlx, nine(d, r, c), nine(i++, x, y)); }
-    con(r, c);            // One digit per cell.
-    con(r, d);            // One digit per row.
-    con(c, d);            // One digit per column.
-    con(r/3*3 + c/3, d);  // One digit per 3x3 region.
+#define con2(x, y) dlx_set(dlx, nine(d, r, c), nine(i++, x, y));
+    con2(r, c);            // One digit per cell.
+    con2(r, d);            // One digit per row.
+    con2(c, d);            // One digit per column.
+    con2(r/3*3 + c/3, d);  // One digit per 3x3 region.
   }
   // Fill in the given digits.
   F(r, 9) F(c, 9) if (a[r][c]) dlx_pick_row(dlx, nine(a[r][c]-1, r, c));

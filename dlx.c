@@ -7,17 +7,6 @@
 
 #define C(i,n,dir) for(cell_ptr i = (n)->dir; i != n; i = i->dir)
 
-struct cell_s;
-typedef struct cell_s *cell_ptr;
-struct cell_s {
-  cell_ptr U, D, L, R;
-  int n;
-  union {
-    cell_ptr c;
-    int s;
-  };
-};
-
 // Some link dance moves.
 static cell_ptr LR_self(cell_ptr c) { return c->L = c->R = c; }
 static cell_ptr UD_self(cell_ptr c) { return c->U = c->D = c; }
@@ -49,13 +38,6 @@ cell_ptr col_new() {
   UD_self(c)->s = 0;
   return c;
 }
-
-struct dlx_s {
-  int ctabn, rtabn, ctab_alloc, rtab_alloc;
-  cell_ptr *ctab, *rtab;
-  cell_ptr root;
-};
-typedef struct dlx_s *dlx_t;
 
 dlx_t dlx_new() {
   dlx_t p = malloc(sizeof(*p));
@@ -119,6 +101,9 @@ void dlx_mark_optional(dlx_t p, int col) {
   LR_self(LR_delete(c));
 }
 
+#define new1() \
+n)
+
 void dlx_set(dlx_t p, int row, int col) {
   // We don't bother sorting. DLX works fine with jumbled rows and columns.
   // We just have to watch out for duplicates. (Actually, I think the DLX code
@@ -128,25 +113,26 @@ void dlx_set(dlx_t p, int row, int col) {
   // is called, not by row number. Similarly for a given row and its LR list.
   alloc_row(p, row);
   alloc_col(p, col);
+  cell_ptr n = malloc(sizeof(*n));
   cell_ptr c = p->ctab[col];
-  cell_ptr new1() {
-    cell_ptr n = malloc(sizeof(*n));
+  cell_ptr *rp = p->rtab + row;
+  if (!*rp) {
     n->n = row;
     n->c = c;
     c->s++;
     UD_insert(n, c);
-    return n;
-  }
-  cell_ptr *rp = p->rtab + row;
-  if (!*rp) {
-    *rp = LR_self(new1());
+    *rp = LR_self(n);
     return;
   }
   // Ignore duplicates.
   if ((*rp)->c->n == col) return;
   C(r, *rp, R) if (r->c->n == col) return;
   // Otherwise insert at end of LR list.
-  LR_insert(new1(), *rp);
+    n->n = row;
+    n->c = c;
+    c->s++;
+    UD_insert(n, c);
+  LR_insert(n, *rp);
 }
 
 static void cover_col(cell_ptr c) {
@@ -180,11 +166,12 @@ int dlx_remove_row(dlx_t p, int i) {
   return 0;
 }
 
-void dlx_solve(dlx_t p,
-               void (*try_cb)(int, int, int),
-               void (*undo_cb)(void),
-               void (*found_cb)(),
-               void (*stuck_cb)()) {
+               dlx_t p;
+               void (*try_cb)(int, int, int);
+               void (*undo_cb)(void);
+               void (*found_cb)();
+               void (*stuck_cb)();
+
   void recurse() {
     cell_ptr c = p->root->R;
     if (c == p->root) {
@@ -207,7 +194,18 @@ void dlx_solve(dlx_t p,
     }
     uncover_col(c);
   }
-  recurse();
+
+void dlx_solve(dlx_t p_,
+               void (*try_cb_)(int, int, int),
+               void (*undo_cb_)(void),
+               void (*found_cb_)(),
+               void (*stuck_cb_)()) {
+p=p_;
+try_cb=try_cb_;
+undo_cb=undo_cb_;
+found_cb=found_cb_;
+stuck_cb=stuck_cb_;
+      recurse();
 }
 
 int *sol, soln;
